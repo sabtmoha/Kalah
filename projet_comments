@@ -1,0 +1,665 @@
+%---------------------------------------------------------------------------------------------------------------------------------------------------
+%----------------------------------------------Predicats utilises dans le code----------------------------------------------------------------------
+%--------------------------------------------------------------------------------------------------------------------------------------------------- 
+
+
+% -----------------------------------------------------
+% ------nth_member(IN N,IN Liste,OUT N_eme element de la liste)
+% Ce predicat a pour objectif de prendre le ieme element d'une liste
+% Condition d'arret: si on demande le premier element, c'est la tete de la liste
+% Recursive : Le N-ieme  element d'une liste, c'est le N-1_ieme element de la queue
+
+nth_member(N,[_|Q],K):- N>1, !, New_N is N-1, nth_member(New_N,Q,K).
+nth_member(1,[T|Q],T).
+% ++++++nth_member(IN N,IN Liste,OUT N_eme element de la liste)
+
+
+% -----------------------------------------------------
+% -----n_substitute(IN N,IN Liste,IN X,OUT New_Liste)
+% Ce predicat a pour objectif de remplacer le Nieme element dans une liste par l'element X
+% Condition d'arret: si on demande de remplacer le premier element, on change la tete et on garde la queue
+% Recursive : Remplacer le N-ieme  element d'une liste, c'est remplacer le N-1_ieme element de la queue en gardant la tete
+% Securite : Si on demande de remplacer le 8_element ((le magasin)), on ne fait rien.
+
+n_substitute(8,Liste,_, Liste):-!.
+n_substitute(1,[T|Q],X,[X|Q]) :- !.
+n_substitute(N,[T|Q1],X,[T|Q2]) :- N>1, !, New_N is N-1, n_substitute(New_N,Q1,X,Q2).
+% +++++n_substitute(IN N,IN Liste,IN element,OUT New_Liste)
+
+
+% -----------------------------------------------------
+% -----swap(IN Plateau,OUT New_Plateau)
+% Ce predicat a pour objectif de tourner le plateau. 
+% Ce predicat nous assure que les puits qui sont a gauche, ce sont les puits du joueur qui est en train de jouer   
+
+swap(plateau(Hs,K,Ys,L),plateau(Ys,L,Hs,K)).
+% ++++++swap(IN Plateau,OUT New_Plateau)
+
+
+% -----------------------------------------------------
+% -----max(IN Premier_element,IN Deuxieme_element,OUT Max)
+% Ce predicat a pour objectif de determiner l'element maximum entre 2 elements
+
+max(A,B,A):- A > B,!.
+max(A,B,B):- A =< B.
+% +++++max(IN Premier_element,IN Deuxieme_element,OUT Max)
+
+
+
+% -----------------------------------------------------
+% -----inverser(IN Liste,OUT Liste_inverse)
+% -----renverser(IN Liste,IN Variable_auxiliare,OUT Liste_inverse)
+% Ces predicats ont pour objectif d'inverser une Liste
+% Condition d'arret: On arrete quand on a empile tous les elements de la Liste dans la Variable_auxiliare  
+% Recursive : Empiler la tete de la Liste dans a la tete de la Variable_auxiliare
+
+inverser(L,IL):-renverser(L,[],IL).
+
+renverser([],L,L).
+renverser([T|Q],L,R):- renverser(Q,[T|L],R).
+% +++++inverser(IN Liste,OUT Liste_inverse)
+% +++++renverser(IN Liste,IN Variable_auxiliare,OUT Liste_inverse)
+
+
+% -----------------------------------------------------
+% -----member(IN//OUT X,IN Liste)
+% Ce predicat a pour objectif soit de determiner si l'element X appartient a la Liste, soit de donner tous les elements de la Liste 
+% Condition d'arret: Ce predicat echoue si la Liste devient vide, On arrete si l'element cherche est la tete de la Liste  
+% Recursive : Si l'element X n'est pas la tete de la Liste, alors on continue a chercher dans la queue
+
+member(T,[T|_]).
+member(T,[X|Q]) :- member(T,Q).
+% +++++member(IN//OUT X,IN Liste)
+
+
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%+++++++++++++++++++++++++++++++++++++++++++++ Predicats utilises dans le code++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+
+
+%---------------------------------------------------------------------------------------------------------------------------------------------------
+%--------------------------------------------------------Initialisation du jeu----------------------------------------------------------------------
+%--------------------------------------------------------------------------------------------------------------------------------------------------- 
+
+% -----------------------------------------------------
+% -----piece(OUT Const_nombre des pierres dans un puit)
+% Ce predicat a pour objectif soit de d'unifier la variable avec le nombre de pierres dans un puit 
+
+piece(7).
+% +++++piece(OUT Const_nombre des pierres dans un puit)
+
+% -----------------------------------------------------
+% -----initialise(OUT Plateau,OUT player)
+% Ce predicat a pour objectif d'initialiser le plateau. 
+% Le choix de la representation du Plateau: une structure complexe constitue de 4 elements;
+% 1-Puits de premier joueur represente par une liste, 2-Magasin du premier joueur,
+% 3-Puits de deuxieme joueur represente par une liste, 4-Magasin du deuxieme joueur  
+
+initialise(plateau([N,N,N,N,N,N,N],0,[N,N,N,N,N,N,N],0),player):- piece(N).
+% +++++initialise(OUT Plateau,OUT player)
+
+
+
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++Initialisation du jeu++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+
+%---------------------------------------------------------------------------------------------------------------------------------------------------
+%--------------------------------------------------------------Affichage----------------------------------------------------------------------------
+%---------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+% -----------------------------------------------------
+% -----write_stones(IN Liste)
+% Ce predicat a pour objectif d'imprimer la Liste 
+% Condition d'arret: Il n'y a rien a imprimer dans une Liste vide  
+% Recursive : On imprime la Tete, et fait un autre appel sur la queue
+
+write_stones([T|Q]):-T<10,write(T),write('  '),write_stones(Q),!.
+write_stones([T|Q]):-T>=10,write(T),write(' '),write_stones(Q).
+write_stones([]).
+% +++++write_stones(IN Liste)
+
+% -----------------------------------------------------
+% -----write_store(IN Magasin1, IN Magasin2)
+% Ce predicat a pour objectif d'imprimer les magasins en respectant un certain espace entre eux 
+
+write_store(Magasin1, Magasin2):- write(Magasin2),write('                      '),write(Magasin1).
+% +++++write_store(IN Magasin1, IN Magasin2)
+
+
+% -----------------------------------------------------
+% -----display_game(IN Plateau)
+% Ce predicat a pour d'afficher le Plateau
+												% --------------------------------------
+												%---------- |7|7|7|7|7|7|7| -----------
+												% ------4						7 ------
+												% ---------- |7|7|7|7|7|7|7| -----------
+												% --------------------------------------
+												
+display_game(plateau(Puits1, Magasin1,Puits2, Magasin2 )):-
+																nl,
+																inverser(Puits2, Ipuits2),write('   '),write_stones(Ipuits2),
+																nl,
+																write_store(Magasin1,Magasin2),
+																nl,
+																write('   '),write_stones(Puits1).
+% +++++display_game(IN Plateau)
+
+
+
+
+
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++Affichage++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+%---------------------------------------------------------------------------------------------------------------------------------------------------
+%------------------------------------------------------------Fin// Debut jeu------------------------------------------------------------------------
+%---------------------------------------------------------------------------------------------------------------------------------------------------
+
+% -----------------------------------------------------
+% -----next_player(IN Actuel_joueur,OUT Prochain_joueur)
+% Ce predicat a pour objectif de changer le tour 
+
+next_player(computer,player).
+next_player(player,computer).
+% +++++next_player(IN Actuel_joueur,OUT Prochain_joueur)
+
+
+
+% -----------------------------------------------------
+% -----game_over(IN Plateau,IN Actuel_joueur,OUT Message_announce)
+% Ce predicat a pour objectif de voir si le jeu a fini et qui a gagne le jeu
+% Le jeu se termine si un des joueurs a gagne plus que la moitie des pierres
+  
+game_over(plateau([0,0,0,0,0,0,0],M,[0,0,0,0,0,0,0],M),Player,draw) :-  piece(N),M =:= 7*N ,!.			
+game_over(plateau(_,K,_,L),Player,Player) :- piece(N), K > 7*N,!.   
+game_over(plateau(_,K,_,L),Player,Opponent) :- piece(N), L > 7*N, next_player(Player,Opponent).
+% +++++game_over(IN Plateau,IN Actuel_joueur,OUT Message_announce)
+
+
+% -----------------------------------------------------
+% -----announce(IN Message_announce)
+% Ce predicat a pour objectif d' afficher le resultat
+
+announce(player) :- nl,nl,write('      You won, Congratulations!'),nl.
+announce(computer) :- nl,nl,write('    I won'),nl.
+announce(draw) :- nl,nl,write('\t\tThe game is a draw'),nl.
+% +++++announce(IN Message_announce)
+
+
+% -----------------------------------------------------
+% -----begin
+% Ce predicat a pour objectif de commencer le jeu
+
+begin :- 
+			nl,write('   Vous avez choisi de jouer contre moi!!'),
+			initialise(Position, Player),     %Player sera unifie toujours avec la constante player  
+			play(Position, Player, Result).	  %% Player qui joue toujours en premier
+% +++++begin
+
+
+% -----------------------------------------------------
+% -----play(IN Position, IN Player, OUT Result)
+% Ce predicat a pour objectif de faire tourner le jeu 	
+% Condition d'arret: Le predicat game_over(IN Plateau,IN Actuel_joueur,OUT Message_announce) n'echoue pas   
+% Algorithme :   Affichage du Plateau
+%                Le joueur choisit un mouvement
+%                Le choix du joueur est execute et le resultat est sauvegarde afin d'eviter l'effet de backtracking
+%                Affichage du Plateau apres avoir distribue
+%                Le joueur continue a joueur si il en a encore le droit, sinon ...
+%                On change le tour et le plateau est tourne ET...
+%                On recommence
+							
+play(Position, Player, Result):-
+									game_over(Position, Player, Result), !,  
+									announce(Result).
+play(Position, Player, _):-
+									retractall(stored(_)),
+									asserta(stored(Position)),
+									nl,nl,
+									write('Nouveau tour'),nl,nl,
+									repeat,
+									stored(Board),
+									display_game(Board),				
+									choose_move(Board, Player, Move),
+									exmove(Move,Board,New_Board,Again),
+									retractall(stored(_)),
+									asserta(stored(New_Board)),
+									Again = 0,!,
+									stored(New_Board),
+									display_game(New_Board),     
+									next_player(Player,New_Player),!,   
+									swap(New_Board,New_Position),       
+									play(New_Position,New_Player,Result).
+% +++++play(IN Position, IN Player, OUT Result)									
+									
+									
+
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++Fin// Debut jeu++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+																								
+
+
+
+
+
+%---------------------------------------------------------------------------------------------------------------------------------------------------
+%------------------------------------------------------------Executer un mouvement------------------------------------------------------------------
+%---------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+% -----------------------------------------------------
+% -----distribute(IN Hole, IN Stones, IN Puits,OUT New_Puits)
+% Ce predicat a pour objectif de faire distribuer les Stones a partir de Hole et donne New_Puits  	
+% Condition d'arret: On ne fait rien si il nous reste 0 Stones a distribuer  
+% Securite: Si on arrive a un magasin((Hole = 8)), on fait rien  
+% Recursive :    On augmente le nombre de pierres dans Hole par 1, avancer le Hole par un pas, diminuer le Stones par 1 et on recommence
+
+distribute(_,0,Puits,Puits) :- !.    
+distribute(8,_,Puits,Puits) :- !.     
+distribute(Hole, Stones, Puits,New_Puits) :- 
+												member(Hole,[1,2,3,4,5,6,7]),!,  
+												Stones > 0,                  
+												nth_member(Hole,Puits,Stones_in_Hole),    
+												New_Stones_in_Hole is Stones_in_Hole + 1,
+												n_substitute(Hole,Puits,New_Stones_in_Hole,Nouveau_Puits),   
+												Hole_suivant is Hole + 1,        
+												New_Stones is Stones - 1,     
+												distribute(Hole_suivant, New_Stones, Nouveau_Puits,New_Puits). 
+% +++++distribute(IN Hole, IN Stones, IN Puits,OUT New_Puits)
+											
+
+% -----------------------------------------------------
+% -----faire_vider(IN N, IN Plateau, OUT New_Plateau)
+% Ce predicat a pour objectif de vider le Nieme Puits dans Plateau  	
+											
+faire_vider(N,plateau(Puits1,Magasin1,Puits2,Magasin2)
+			,plateau(New_Puits1,Magasin1,Puits2,Magasin2)) :-n_substitute(N,Puits1,0,New_Puits1).
+% +++++faire_vider(IN N, IN Plateau, OUT New_Plateau)
+ 
+ 
+
+% -----------------------------------------------------
+% -----check_capture(IN Hole,IN Stones,IN Mon_Puits,OUT New_Mon_Puits,IN Adversaire_Puits2,OUT New_Adversaire_Puits2,OUT Pieces_capturees)
+% Ce predicat a pour objectif de verifier si le joueur a capture et prendre les pieces capturees 
+% Algorithme: 
+%				On calcule le Finishing_Hole a partir de Hole et Stones  
+%               2 cas : 
+%						1- Ce Finishing_Hole etait vide avant l'execution, donc on prend les pieces dans l'OppositeHole et a laquelle on ajoute 1.
+%								En plus, on vide FinishingHole et OppositeHole
+%						2- Sinon, Pieces_capturees egale a zero
+ 
+check_capture(Hole,Stones,Puits1,New_Puits1,Puits2,New_Puits2,Pieces) :-
+																			FinishingHole is Hole + Stones - 1,
+																			nth_member(FinishingHole,Puits1,Pieces_into_FinishingHole),
+																			Pieces_into_FinishingHole = 1,
+																			OppositeHole is 8 - FinishingHole,
+																			nth_member(OppositeHole,Puits2,Pieces_Capture),
+																			n_substitute(FinishingHole,Puits1,0,New_Puits1),
+																			n_substitute(OppositeHole,Puits2,0,New_Puits2),
+																			Pieces is Pieces_Capture + 1.
+check_capture(_,_,Puits1,Puits1,Puits2,Puits2,0) :- !.
+% +++++check_capture(IN Hole,IN Stones,IN Mon_Puits,OUT New_Mon_Puits,IN Adversaire_Puits2,OUT New_Adversaire_Puits2,OUT Pieces_capturees)
+
+
+
+% -----------------------------------------------------
+% -----update_magasin(IN Pieces_Capturees,IN Hole,IN Stones,IN Mon_Magasin,OUT New_Mon_Magasin)
+% Ce predicat a pour objectif d'ajouter a Mon_Magasin les pieces_Capturees
+% 2 cas:  
+%			1- Si FinishingHole est le magasin, on ajoute a Mon_Magasin les Pieces_Capturees + 1
+%			2- Sinon, on ajoute seulement les Pieces_Capturees
+
+update_magasin(Pieces,Hole,Stones,Magasin1,New_Magasin1) :- Stones < 8-Hole+1, !, New_Magasin1 is Magasin1 + Pieces. 
+update_magasin(Pieces,Hole,Stones,Magasin1,New_Magasin1) :- Stones =:= 8-Hole+1, New_Magasin1 is Magasin1 + Pieces+1.
+%+++++update_magasin(IN Pieces_Capturees,IN Hole,IN Stones,IN Mon_Magasin,OUT New_Mon_Magasin)
+
+
+% -----------------------------------------------------
+% -----check_if_finished1(IN FinishingHole, IN Mes_Puits,OUT Pieces_into_FinishingHole,OUT Again)
+% Ce predicat a pour objectif de verifier si le joueur a le droit de rejouer. 
+%  Convention: Again = 1: Rejouer;  Again = 0: Non 
+% 2 cas:  
+%			1- Si FinishingHole est le magasin, Again = 1 et on considere que le Pieces_into_FinishingHole = 0 
+%			2- Sinon, on Again = 0 et on cherche Pieces_into_FinishingHole
+
+check_if_finished1(8,_,0,1) :- !. 
+check_if_finished1(FinishingHole,Puits1,Pieces_into_FinishingHole,0) :- nth_member(FinishingHole,Puits1,Pieces_into_FinishingHole).										
+% +++++check_if_finished1(IN FinishingHole, IN Mes_Puits,OUT Pieces_into_FinishingHole,OUT Again)
+
+
+
+% -----------------------------------------------------
+% -----exmove(IN Liste_Mouvements,IN Plateau,OUT New_Plateau, OUT Again)
+% Ce predicat a pour objectif d'executer la Liste des mouvements. 
+%  Conditions d'arret: La liste des mouvements est constitue d'un seul mouvement 
+%  Securite: La Liste des mouvements est vide, on ne fait rien  
+% Algorithme:  
+%			   On vide le Hole ((Mouvement)) dans Mes_Puits et on avance par un pas
+%              On distribue les Stones
+   
+exmove([],Board,Board,0):- !.
+exmove([N],Board,FinalBoard,Again) :-
+									!,
+									Board = plateau(Puits1,_,_,_),
+									nth_member(N,Puits1,Stones),
+									faire_vider(N,Board,Nouveau_Board),
+									Hole_Suivant is N+1,
+									distribute_stones(Stones,Hole_Suivant,Nouveau_Board,FinalBoard,Again).
+exmove([N|Ns],Board,FinalBoard,Again) :-
+									Board = plateau(Puits1,_,_,_),
+									nth_member(N,Puits1,Stones),
+									faire_vider(N,Board,Nouveau_Board),
+									Hole_Suivant is N+1,
+									distribute_stones(Stones,Hole_Suivant,Nouveau_Board,New_Board,_),
+									exmove(Ns,New_Board,FinalBoard,Again).
+ % +++++exmove(IN Liste_Mouvements,IN Plateau,OUT New_Plateau, OUT Again)
+
+											
+											
+
+% -----------------------------------------------------
+% -----distribute_stones(IN Stones,IN Hole,IN Plateau,OUT New_Plateau,OUT Again)
+% Ce predicat a pour objectif de distribuer les Stones dans l'ensemble du Plateau a partir de Hole. 
+%  Conditions d'arret: Il n'y a plus de Stones a distribuer    
+% Algorithme:  
+%				On distribue dans Mes_Puits et on recupere le Nouveau_Plateau, le Nouveau_Stones, et la variable Again1
+%               On distribue les Stones dans Adversaire_Puits et on recupere le Final_Plateau et le Final_Stones 
+% Again sera calcule a partir de Again1 et Again2, il est le maximum entre les deux
+
+distribute_stones(0,_,Board,Board,0) :- !.
+distribute_stones(Stones,Hole,Board,FinalBoard,Again) :-
+														distribute_my_holes(Stones,Hole,Board,Board1,Stones1,Again1),
+														distribute_your_holes(Stones1,1,Board1,New_Board,New_Stones),
+														distribute_stones(New_Stones,1,New_Board,FinalBoard,Again2),
+														max(Again1,Again2,Again),!.
+% +++++distribute_stones(IN Stones,IN Hole,IN Plateau,OUT New_Plateau,OUT Again)
+	
+
+
+% -----------------------------------------------------
+% -----distribute_my_holes(IN Stones,IN Hole,IN Plateau, OUT New_Plateau, OUT New_Stones, OUT Again)
+% Ce predicat a pour objectif de distribuer les Stones dans Mes_Puits a partir de Hole. 
+%  Conditions d'arret: Il n'y a plus de Stones a distribuer    
+% 2 cas:  
+%			1- Stones sont suffisantes pour depasser Mon_Magasin;
+%                 On distribue les Stones
+%                 On augmente Mon_Magain par 1
+%                 On deduit New_Stones
+%			2- Stones ne sont pas suffisantes pour depasser Mon_Magasin;
+%                 On distribue les Stones
+%                 On verifie si on a capture et on met a jour Mon_Magasin
+%                 On verifie si on a le droit de rejouer
+%                 On vide le Finishing_Hole et on avance d'un pas
+%				  On redistribue dans Mes_Puits 
+% Again sera calcule a partir de Again1 et Again2, il est le maximum entre les deux
+% Dans le cas ou on tombe dans Mon_Magasin, Finishing_Hole sera 8, mais New_Stones sera 0, donc on va se terminer dans la prochain appel
+
+distribute_my_holes(0,_,Board,Board,0,0) :- !.													
+distribute_my_holes(Stones,Hole,plateau(Puits1,Magasin1,Puits2,Magasin2),
+			plateau(New_Puits1,New_Magasin1,Puits2,Magasin2),New_Stones,0) :-
+																				Stones > 8-Hole + 1,!,
+																				distribute(Hole,Stones,Puits1,New_Puits1),
+																				New_Magasin1 is Magasin1+1,
+																				New_Stones is Stones + Hole - 8 - 1.																						
+distribute_my_holes(Stones,Hole,plateau(Puits1,Magasin1,Puits2,Magasin2),
+										New_Board,New_Stones,Again) :-
+																		distribute(Hole,Stones,Puits1,Nouveau_Puits1),
+																		check_capture(Hole,Stones,Nouveau_Puits1,New_Puits1,Puits2,New_Puits2,Pieces),
+																		update_magasin(Pieces,Hole,Stones,Magasin1,New_Magasin1),
+																		FinishingHole is Hole + Stones - 1,
+																		check_if_finished1(FinishingHole,New_Puits1,Stones_in_FHole,Again1),
+																		n_substitute(FinishingHole, New_Puits1,0, Newest_Puits1),
+																		FinishingHole_suivant is FinishingHole +1,
+																		distribute_my_holes(Stones_in_FHole,FinishingHole_suivant,
+																		   plateau(Newest_Puits1,New_Magasin1,New_Puits2,Magasin2), New_Board,New_Stones,Again2),            
+																		max(Again1,Again2,Again).
+% +++++distribute_my_holes(IN Stones,IN Hole,IN Plateau, OUT New_Plateau, OUT New_Stones, OUT Again)	
+
+
+
+
+% -----------------------------------------------------
+% -----distribute_your_holes(IN Stones,IN Hole,IN Plateau, OUT New_Plateau, OUT New_Stones)
+% Ce predicat a pour objectif de distribuer les Stones dans Adversaire_Puits a partir de Hole. 
+%  Conditions d'arret: Il n'y a plus de Stones a distribuer    
+% 2 cas:  
+%			1- Stones sont suffisantes pour depasser Adversaire_Magasin;
+%                 On distribue les Stones
+%                 On deduit New_Stones
+%			2- Stones ne sont pas suffisantes pour depasser Adversaire_Magasin;
+%                 On distribue les Stones
+%                 2 cas: 
+%                 	1- Finishing_Hole etait vide avant la ditribution des Stones
+%                 			On vide Finishing_Hole et on avance d'un pas
+%                      		On redistribue dans Adversaire_Puits
+%					2- Finishing_Hole n'etait pas vide avant la ditribution des Stones 
+%                      		On ne fait rien de plus, New_Stones est zero
+
+distribute_your_holes(0,_,Board,Board,0) :- !.
+distribute_your_holes(Stones,Hole,plateau(Puits1,Magasin1,Puits2,Magasin2),
+			plateau(Puits1,Magasin1,New_Puits2,Magasin2),New_Stones) :-
+																		Stones > 8-Hole,!,
+																		distribute(Hole,Stones,Puits2,New_Puits2),
+																		New_Stones is Stones+Hole-8.
+distribute_your_holes(Stones,Hole,plateau(Puits1,Magasin1,Puits2,Magasin2),
+											New_Board,New_Stones) :-
+																		distribute(Hole,Stones,Puits2,New_Puits2),
+																		FinishingHole is Hole + Stones -1,
+																		nth_member(FinishingHole,New_Puits2,Stones_in_FHole),
+																		Stones_in_FHole > 1,!,
+																		n_substitute(FinishingHole, New_Puits2,0, Newest_Puits2),
+																		FinishingHole_suivant is FinishingHole +1,
+																		distribute_your_holes(Stones_in_FHole,FinishingHole_suivant
+																		   ,plateau(Puits1,Magasin1,Newest_Puits2,Magasin2), New_Board,New_Stones).
+distribute_your_holes(Stones,Hole,plateau(Puits1,Magasin1,Puits2,Magasin2)
+				,plateau(Puits1,Magasin1,New_Puits2,Magasin2),0) :-  
+																		distribute(Hole,Stones,Puits2,New_Puits2).
+% +++++distribute_your_holes(IN Stones,IN Hole,IN Plateau, OUT New_Plateau, OUT New_Stones)																		   
+																		   
+
+
+																		   
+
+
+												
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++Executer un mouvement++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+ 
+ 
+
+												
+
+%---------------------------------------------------------------------------------------------------------------------------------------------------
+%-------------------------------------------------------------Choix d'un mouvement------------------------------------------------------------------
+%---------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+% -----------------------------------------------------
+% -----legal(IN Mouvement)
+% Ce predicat a pour objectif de voir si le mouvement choisi par le joueur est valide
+
+legal(M):- M >= 1, M =<7,!.
+legal(_):- nl, write('\t\t Votre choix doit etre compris entre 1 et 7!!!!'),nl,fail.
+% +++++legal(IN Mouvement)
+			
+
+% -----------------------------------------------------
+% -----choose_move(IN Position,IN Joueur,OUT Move)
+% Ce predicat a pour objectif de choisir le mouvement
+% Pour l'humain, on demande de choisir un mouvement et on verifie qu'il es legal
+% Pour l'ordinateur, c'est l'intelligence artificielle qui decide  
+
+choose_move(Position,computer,Move):-
+										alpha_beta(Position,-200,200,Move),
+										nl, write('\t\t Move choisi '),write(Move),nl.
+choose_move(Position,player,[Move]):-
+										repeat, 
+										nl, write('\t\t Please Make move'),nl,
+										read(Move),
+										legal(Move),!.
+% +++++choose_move(IN Position,IN Joueur,OUT Move)
+
+									
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++Choix d'un mouvement+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+
+
+
+
+%---------------------------------------------------------------------------------------------------------------------------------------------------
+%---------------------------------------------------------------alpha_beta--------------------------------------------------------------------------
+%---------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+% -----------------------------------------------------
+% -----lookahead(OUT Profondeur)
+% Ce predicat a pour objectif de fixer la profondeur choisie pour le predicat move(IN Plateau,OUT (Mouvements,Gain_du_mouvement),IN Profondeur)
+
+lookahead(12).
+% +++++lookahead(OUT Profondeur)
+
+
+% -----------------------------------------------------
+% -----value(IN Plateau,OUT Gain_du_mouvement)
+% Ce predicat a pour objectif de fixer la profondeur choisie pour le predicat move(IN Plateau,OUT (Mouvements,Gain du mouvement),IN Profondeur)
+% Le mouvement sera evalue en fonction de la difference entre mon Magasin et le Magasin de l'adversaire 
+
+value(plateau(_,K,_,L),Value) :- Value is K-L.
+% +++++value(IN Plateau,OUT Gain_du_mouvement) 
+										
+
+										
+% -----------------------------------------------------
+% -----alpha_beta(IN Plateau,IN Alpha,IN Beta,OUT BestMove)
+% Ce predicat constitue le coeur de l'intelligence artificielle
+% Alpha: une borne inferieure pour le gain voulu
+% Beta: une borne superiere pour le gain voulu  au-dela de laquelle c'est futile de continuer (certainement gagner)
+% Algorithme:  On determine tous les mouvements (relativement a la profondeur) possibles avec leurs gains
+%              On les compare afin de choisir le meilleur mouvement
+  
+alpha_beta(Position,Alpha,Beta,BestMove):-
+													lookahead(Depth),
+													setof(M,move(Position,M,Depth),Moves),
+													evaluate_and_choose(Moves,Alpha,Beta,[],BestMove).
+% +++++alpha_beta(IN Plateau,IN Alpha,IN Beta,OUT BestMove)
+			
+
+
+% -----------------------------------------------------
+% -----move(IN Plateau,OUT (Mouvements,Gain du mouvement),IN Profondeur)
+% -----extend_move(IN Plateau, IN//OUT Liste_Mouvements,OUT Gain du mouvement, IN Profondeur,IN Again)
+% Ces predicats ont pour objectif de determiner tous les mouvements (relativement a la profondeur) possibles avec leurs gains
+%Recursive croisee: Le predicat move(IN Plateau,OUT (Mouvements,Gain du mouvement),IN Profondeur) 
+% 				appelle le predicat extend_move(IN Plateau, IN//OUT Liste_Mouvements,OUT Gain du mouvement, IN Profondeur,IN Again) qui   
+% 				a nouveau appelle move(IN Plateau,OUT (Mouvements,Gain du mouvement),IN Profondeur)
+% Conditions d'arret: Le Plateau devient vide (impossible de jouer), ou la profondeur devient 0 (Eviter le debordement de memoire), 
+%						ou on n'a pas le droit de rejouer
+ 
+% Algorithme:  Avec chaque appel, on diminue la profondeur de 1
+%              On choisit un mouvement et on verifie que le puit n'est pas vide
+%              On execute le mouvement pour connaitre son gain et aussi pour savoir si le joueur a le droit de rejouer
+%              On appelle le predicat extend_move(IN Plateau, IN//OUT Liste_Mouvements,OUT Gain du mouvement, IN Profondeur,IN Again) 
+
+move(Board,([M|Ms],Value),Dth) :-
+						New_Dth is Dth - 1,
+						member(M,[1,2,3,4,5,6,7]),
+						Board = plateau(Puits1,_,_,_),
+						nth_member(M,Puits1,N),
+						N \= 0,
+						exmove([M],Board,New_Board,Again),
+						extend_move(New_Board,Ms,Value,New_Dth,Again).
+move(plateau([0,0,0,0,0,0,0],Magasin1,_,Magasin2),([],Value),_) :- value(plateau([0,0,0,0,0,0,0],Magasin1,_,Magasin2),Value).
+					
+% 3 cas:  
+%              1- La profondeur est differente de zero et on a le droit de rejouer; 
+%					On appelle le predicat move(IN Plateau,OUT (Mouvements,Gain du mouvement),IN Profondeur)
+%              2- La profondeur est egale a zero et on a le droit de rejouer;
+%              		On choisit un mouvement, calcule le gain cumule et se termine 
+%              3- on n'a pas le droit de rejouer;
+%              		 On calcule le gain du mouvement choisi et on se termine 
+
+extend_move(Board,M2,Value,D,1):-
+									D \= 0,!, 
+									move(Board,(M2,Value),D).
+extend_move(Board,[M2],Value,0,1):-
+									!, 
+									member(M2,[1,2,3,4,5,6,7]),
+									Board = plateau(Puits1,_,_,_),
+									nth_member(M2,Puits1,N2),
+									N2 \= 0,
+									exmove([M2],Board,New_Board,_),
+									value(New_Board,Value).									
+extend_move(Board,[],Value,_,0) :- value(Board,Value).
+
+% +++++move(IN Plateau,OUT (Mouvements,Gain du mouvement),IN Profondeur)			
+% +++++extend_move(IN Plateau, IN//OUT Liste_Mouvements,OUT Gain du mouvement, IN Profondeur,IN Again)
+							
+				
+
+				
+				
+% -----------------------------------------------------
+% -----evaluate_and_choose(IN Mouvement_choisis[(Move,Value)|Moves],IN Alpha,IN Beta,IN Meilleur_Mouvement_trouve_pour_l'instant,OUT BestMove)
+% Ce predicat a pour objectif de trouver le meilleur mouvement qui a le gain maximum
+% Condition d'arret: La Liste du mouvements_choisis est vide
+% 3 cas:
+%			1- Le gain obtenu est superieur a la borne sup fixee, on se termine sans chercher plus loin
+%
+%			2- Le gain obtenu est inferieur a la borne sup fixee, mais superieur a la borne inf fixee, 
+%				 on met le mouvement dans la variable temporaire, on change la borne inf et continue a chercher dans le reste 
+
+%			3- Sinon, la recherche se poursuit...
+%
+ 
+evaluate_and_choose([],_,_,BestMove,BestMove).				
+evaluate_and_choose([(BestMove,Value)|_],_,Beta,_,BestMove):-	
+																Value >= Beta,!.
+evaluate_and_choose([(Move,Value)|Moves],Alpha,Beta,_,BestMove):-	
+																Value > Alpha,Value < Beta,!,
+																evaluate_and_choose(Moves,Value,Beta,Move,BestMove).
+evaluate_and_choose([(_,Value)|Moves],Alpha,Beta,Move1,BestMove):-	
+																Value =< Alpha,!,
+																evaluate_and_choose(Moves,Alpha,Beta,Move1,BestMove).
+% +++++evaluate_and_choose(IN Mouvement_choisis[(Move,Value)|Moves],IN Alpha,IN Beta,IN Meilleur_Mouvement_trouve_pour_l'instant,OUT BestMove)
+
+
+
+
+
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++alpha_beta++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+						
+						
+
+								
+								
+																		
